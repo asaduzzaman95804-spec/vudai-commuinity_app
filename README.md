@@ -31,6 +31,36 @@ required.
   *signed* APK/AAB immediately. Replace it with your own before publishing
   to Google Play — see below.
 
+## One file this environment truly could not produce
+
+Everything below — `app/`, `AndroidManifest.xml`, all Kotlin/resource
+files, `gradlew`, `gradlew.bat`, `gradle/wrapper/gradle-wrapper.properties`
+— **is included** in this zip. The one file missing is
+`gradle/wrapper/gradle-wrapper.jar` — a small (~43 KB) compiled binary that
+Gradle's own installer generates, normally by downloading it. The sandbox
+that built this project has no internet access, so it couldn't fetch that
+one binary. This is not something I can work around by writing more code —
+it has to come from an actual Gradle install or download.
+
+It takes 10 seconds to fix, three ways — pick whichever is easiest:
+
+1. **Android Studio (recommended, zero commands):** just open the project
+   folder as in Option A below. Android Studio detects the missing wrapper
+   jar automatically and offers to regenerate it, or you can go
+   **File → Sync Project with Gradle Files** and it fetches it as part of
+   the sync.
+2. **If you already have Gradle installed anywhere** (`gradle -v` works in
+   your terminal): run this once inside the `FriendMemoryBook` folder:
+   ```bash
+   gradle wrapper --gradle-version 8.7
+   ```
+3. **Manual download:** grab it directly from
+   `https://raw.githubusercontent.com/gradle/gradle/v8.7.0/gradle/wrapper/gradle-wrapper.jar`
+   and save it as `gradle/wrapper/gradle-wrapper.jar` in this project.
+
+After any of the three, `./gradlew assembleDebug` etc. will work exactly as
+described below.
+
 ## Step-by-step: build and install
 
 ### Option A — Android Studio (easiest)
@@ -52,6 +82,28 @@ required.
 7. To get the AAB for Play Store: **Build → Build App Bundle(s)/APK(s) →
    Build Bundle(s)**. Output lands in
    `app/build/outputs/bundle/release/app-release.aab`.
+
+### Option C — No computer setup at all (GitHub Actions builds the APK for you)
+
+This project includes `.github/workflows/android-build.yml`, which builds a
+real, installable debug APK, a signed release APK, and a signed AAB
+automatically — on GitHub's own servers, with zero local setup.
+
+1. Create a free account at [github.com](https://github.com) if you don't
+   have one, and create a new **public** repository (e.g. `friend-memory-book`).
+2. Upload this entire `FriendMemoryBook` folder's contents to that repo
+   (on github.com you can drag-and-drop all the files/folders into the
+   "Add file → Upload files" screen — no `git` command needed).
+3. Commit the upload. This automatically triggers the workflow.
+4. Go to the **Actions** tab of your repo → click the latest run (it takes
+   2–4 minutes) → scroll to **Artifacts** at the bottom → download
+   `app-debug-apk` (a zip containing `app-debug.apk`).
+5. Unzip it, transfer `app-debug.apk` to your phone (email it to yourself,
+   Google Drive, USB — any way), tap it, allow "install from unknown
+   sources" if asked, and it installs like any app.
+
+This is the most reliable way to get an actual `.apk` file in your hands
+without installing Android Studio.
 
 ### Option B — Command line (if you have the Android SDK + JDK 17 installed)
 
